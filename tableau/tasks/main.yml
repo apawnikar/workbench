@@ -1,0 +1,80 @@
+---
+- name: "Get current status of the tableau services"
+  shell: 'bash -ilc "tsm status -v"'
+  register: status_rc
+  when:
+    - tableau_action == "shutdown"
+
+- name: "Start the administrative services"
+  shell: 'bash -ilc "cd {{ tableau_adm_path|default("/opt/tableau/tableau_server/packages/scripts.20213.21.1217.2247/") }}; ./start-administrative-services"'
+  become_user: root
+  register: services_rc
+  when:
+    - tableau_action == "startup"
+    - recycle is not defined
+
+- name: "Activate the license"
+  shell: 'bash -ilc "cd {{ tableau_path|default("/opt/tableau/data/tableau_server/config/") }}; ./licenses_activate.sh | tee /tmp/licenses_activate.out"'
+  become_user: root
+  register: license_rc
+  when:
+    - tableau_action == "startup"
+    - recycle is not defined
+
+- name: "Tableau Start/Stop - {{ tableau_action }}"
+  shell: 'bash -ilc "tsm {{ tableau_actions[tableau_action] }}"'
+  register: startstop_rc
+  async: 1800
+  poll: 30
+  ignore_errors: true
+
+# name: 'Pasue for {{ stop_pause_time }}sec'
+# pause:
+#   seconds: "{{ stop_pause_time }}"
+# when:
+#   - not ansible_check_mode
+#   - tableau_action == "shutdown"
+
+# name: 'Pasue for {{ pause_time }}sec'
+# pause:
+#   seconds: "{{ pause_time }}"
+# when:
+#   - not ansible_check_mode
+#   - tableau_action == "startup"
+
+- name: "Get current status of the tableau services"
+  shell: 'bash -ilc "tsm status -v"'
+  register: status_startstop_rc
+
+- name: "Deactivate the license"
+  shell: 'bash -ilc "cd {{ tableau_path|default("/opt/tableau/data/tableau_server/config/") }}; ./licenses_deactivate.sh | tee /tmp/licenses_deactivate.out"'
+  register: deactivate_rc
+  when:
+    - not ansible_check_mode
+    - tableau_action == "shutdown"
+    - recycle is not defined
+
+- name: "Stop the administrative services"
+  shell: 'bash -ilc "cd {{ tableau_adm_path|default("/opt/tableau/tableau_server/packages/scripts.20213.21.1217.2247/") }}; ./stop-administrative-services"'
+  become_user: root
+  register: license_rc
+  when:
+    - not ansible_check_mode
+    - tableau_action == "shutdown"
+    - recycle is not defined
+
+- name: "Checking status of tableau services"
+  shell: 'ps -ef |  grep -v grep | grep -v systemd | grep -v "sd-pam" | grep -v FlexNetFs | grep "tableau"'
+  register: tomcat_rc_shutdown
+  failed_when: tomcat_rc_shutdown.rc == 0
+  when:
+    - tableau_action == "shutdown"
+    - recycle is not defined
+
+- name: "Checking status of the tableau services"
+  shell: 'ps -ef |  grep -v grep | grep -v systemd | grep -v "sd-pam" | grep -v FlexNetFs | grep "tableau"'
+  register: tomcat_rc_startup
+  failed_when: tomcat_rc_startup.rc > 0
+  when: 
+    - tableau_action == "startup"
+    - recycle is not defined
