@@ -1,0 +1,9 @@
+---
+- name: 'Linux Patch Servers'
+  hosts: all
+  gather_facts: True
+  become_method: sudo
+  become_user: root
+  become: yes
+  roles:
+    - lin_patch

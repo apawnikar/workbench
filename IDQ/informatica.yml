@@ -1,0 +1,11 @@
+---
+- name: 'Informatica Start/Stop'
+  hosts: all
+  collections:
+    - community.general
+  gather_facts: True
+  become_method: sudo
+  become_user: idqadmin
+  become: yes
+  roles:
+    - informatica

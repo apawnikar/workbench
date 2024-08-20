@@ -1,0 +1,66 @@
+---
+- name: "Insttalling Security Patches"
+  shell: 'yum update -y --security'
+  register: yum_security_rc
+
+- name: "Insttalling Bugfix Patches"
+  shell: 'yum update -y --bugfix'
+  register: yum_bugfix_rc
+
+- name: "Reboot the server"
+  reboot:
+
+- name: "Check connection"
+  debug:
+    msg: "Reboot OK"
+
+- name: "Check if AWS CLI is installed"
+  shell: "/usr/local/bin/aws --version"
+  register: aws_rc
+  changed_when: false
+  failed_when: false
+  
+- include_tasks: awscli.yml
+  when: aws_rc.rc != 0
+
+#- name: "Create AWS CLI directory"
+#  ansible.builtin.file:
+#    path: /root/.aws
+#    state: directory
+#    mode: '0755'
+
+#- name: "Templating AWS CLI config file"
+#  ansible.builtin.template:
+#    src: config.j2
+#    dest: /root/.aws/config
+#    owner: root
+#    group: root
+#    mode: '0400'
+
+#- name: "Templating AWS CLI credential file"
+#  ansible.builtin.template:
+#    src: credentials.j2
+#    dest: /root/.aws/credentials
+#    owner: root
+#    group: root
+#    mode: '0400'
+
+- name: "Get instance ID"
+  uri:
+    url: "http://169.254.169.254/latest/meta-data/instance-id"
+    return_content: yes
+  register: aws_instance_id
+
+#- name: "AWS Compliance Scan"
+#  shell: "/usr/local/bin/aws ssm describe-instance-patch-states --instance-ids {{ aws_instance_id.content|default('none') }} --region us-west-2"
+#  register: aws_scan_rc
+
+#- name: "Check if there are no pending patches to be installed on the host"
+#  fail:
+#    msg: "MissingCount: {{ out[0] }}"
+#  vars: 
+#    out: "{{ aws_scan_rc.stdout | from_json|json_query('InstancePatchStates[].MissingCount') }}"
+#  when:
+#    - not ansible_check_mode
+#    - out[0] != 0
+  

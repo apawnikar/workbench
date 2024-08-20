@@ -1,0 +1,15 @@
+---
+- name: 'Stop Informatica'
+  hosts: all
+  collections:
+    - community.general
+  become_method: sudo
+  become_user: idqadmin
+  become: yes
+  tasks:
+    - debug:
+        msg: "Stop Informatica"
+
+- name: "Stop Informatica"
+  import_playbook: informatica.yml
+

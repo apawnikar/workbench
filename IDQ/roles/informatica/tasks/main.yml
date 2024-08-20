@@ -1,0 +1,60 @@
+---
+- name: "Informatica Start/Stop - {{ informatica_action }}"
+  shell: 'bash -ilc "{{ informatica_path|default("/opt/informatica/10_4_1/tomcat/bin") }}/infaservice.sh {{ actions[informatica_action] }}"'
+  register: cmd_rc
+
+- name: 'Pasue for {{ stop_pause_time }}sec'
+  pause:
+    seconds: "{{ stop_pause_time }}"
+  when:
+    - not ansible_check_mode
+    - informatica_action == "shutdown"
+
+- name: 'Pasue for {{ pause_time }}sec'
+  pause:
+    seconds: "{{ pause_time }}"
+  when:
+    - not ansible_check_mode
+    - informatica_action == "startup"
+
+- name: "Checking status of Tomcat"
+  shell: 'ps -ef |  grep -v grep | grep "INF"'
+  register: tomcat_rc_shutdown
+  failed_when: tomcat_rc_shutdown.rc == 0
+  when:
+    - informatica_action == "shutdown"
+
+- name: "Checking status of Tomcat"
+  shell: 'ps -ef |  grep -v grep | grep "_Admin"'
+  register: tomcat_rc_shutdown
+  failed_when: tomcat_rc_shutdown.rc == 0
+  when:
+    - informatica_action == "shutdown"
+
+- name: "Checking status of Tomcat"
+  shell: 'ps -ef | grep -v grep | grep "_Admin"'
+  register: tomcat_rc_startup
+  failed_when: tomcat_rc_startup.rc > 0
+  when: 
+    - informatica_action == "startup"
+
+- name: "Checking status of Tomcat"
+  shell: 'ps -ef | grep -v grep | grep "INF"'
+  register: tomcat_rc_startup
+  failed_when: tomcat_rc_startup.rc > 0
+  when: 
+    - informatica_action == "startup"
+
+- name: 'check the logs to see the status and it should be “AdminConsole was successful”'
+  shell: 'tail -100 /opt/informatica/10_4_1/logs/node01/node.log | grep "AdminConsole"'
+  register: AdminConsole_rc_startup
+  failed_when: AdminConsole_rc_startup.rc > 0
+  when: 
+    - informatica_action == "startup"
+
+- name: 'Check for ODBC details in tomcat_envvars.txt and envvars.txt in the below path.'
+  shell: 'cat /opt/informatica/10_4_1/tomcat/temp/tomcat_envvars.txt | grep "ODBC"'
+  register: ODBC_rc_startup
+  failed_when: ODBC_rc_startup.rc > 0
+  when: 
+    - informatica_action == "startup"

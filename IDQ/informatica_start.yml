@@ -1,0 +1,17 @@
+---
+- name: 'Start Informatica'
+  hosts: all
+  collections:
+    - community.general
+  become_method: sudo
+  become_user: idqadmin
+  become: yes
+  tasks:
+    - debug:
+        msg: "Start Informatica"
+
+- name: "Start Informatica"
+  import_playbook: informatica.yml
+
+- name: "Validation"
+  import_playbook: validation.yml

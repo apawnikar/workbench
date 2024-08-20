@@ -1,0 +1,8 @@
+---
+- name: "Verify able to access site"
+  uri:
+    url: '{{ item }}'
+    validate_certs: no
+    status_code: 200
+  loop: "{{ validation_site_url }}"
+  register: uri_reg

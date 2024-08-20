@@ -1,0 +1,6 @@
+#[informatica]
+#10.216.41.231 fr_ig_path=/opt/forgerock/apps/tomcat9/IG_Tomcat/bin/
+[informatica]
+10.216.41.43
+[win]
+10.216.41.20 ansible_connection=winrm ansible_winrm_server_cert_validation=ignore ansible_user="dxcdeplcleszek@ad.m.dxc-ap.com" ansible_winrm_transport=ntlm

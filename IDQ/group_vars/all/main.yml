@@ -1,0 +1,12 @@
+---
+pause_time: 240
+stop_pause_time: 240
+actions:
+  startup: startup
+  shutdown: shutdown
+mdm_actions:
+  startup: Start.sh
+  shutdown: Stop.sh
+tableau_actions:
+  startup: start
+  shutdown: stop

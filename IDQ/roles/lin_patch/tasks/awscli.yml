@@ -1,0 +1,25 @@
+---
+- name: "Download AWS CLI"
+  get_url:
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: /root/awscli-exe-linux-x86_64.zip
+    mode: 0440
+
+- name: "Install unzip"
+  ansible.builtin.package:
+    name: unzip
+    state: present
+
+- name: "Extract archive"
+  ansible.builtin.unarchive:
+    src: /root/awscli-exe-linux-x86_64.zip
+    dest: /root
+    remote_src: yes
+
+- name: "Install AWS CLI"
+  shell: "/root/aws/install -i /usr/local/aws-cli -b /usr/local/bin"
+
+- name: "Clean up AWS CLI"
+  ansible.builtin.file:
+    state: absent
+    path: /root/aws
